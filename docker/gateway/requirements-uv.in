@@ -3,4 +3,4 @@
 # so it does not ship in the runtime image. Recompile requirements-uv.txt with:
 #   uv pip compile requirements-uv.in --no-deps --generate-hashes --universal \
 #     --python-version 3.11 -o requirements-uv.txt
-uv==0.13.5
+uv==0.13.7
