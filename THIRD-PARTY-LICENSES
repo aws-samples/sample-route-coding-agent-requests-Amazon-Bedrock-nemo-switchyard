@@ -1,0 +1,66 @@
+Third-party software used by this sample
+========================================
+
+This repository's own code is licensed under MIT-0 (see LICENSE), and the
+repository doesn't vendor third-party source code. Building the gateway image,
+with `docker compose up --build` or `cdk deploy`, downloads LiteLLM, NVIDIA
+Switchyard, and the build tools below, and `cdk deploy` pushes the built image
+to an Amazon ECR repository in your own AWS account. `npm ci` and the CI
+workflow download the rest. Each component keeps its own license, as stated by
+its upstream project.
+
+
+LiteLLM
+-------
+Source:  the ghcr.io/berriai/litellm base image, pinned in
+         docker/gateway/Dockerfile
+License: MIT, except the content of its enterprise/ directory
+
+The LiteLLM image also contains LiteLLM's enterprise code, as the
+/app/enterprise directory and as the installed litellm-enterprise Python
+package. That code is under the BerriAI Enterprise license, which is not an
+open source license; using it in production requires a BerriAI Enterprise
+subscription. This sample sets no LITELLM_LICENSE. Its profiles
+(profiles/*/litellm.yaml) configure only the model list, the routing plugin,
+timeouts, retries, and the master key, with no SSO, JWT authentication,
+guardrails, audit logs, or database, and docker/gateway/start.sh only writes
+the configuration files and starts the LiteLLM proxy.
+
+The image is based on Wolfi and also contains operating system and Python
+packages under their own licenses. These include GPL and LGPL operating system
+packages (for example bash, busybox, glibc, readline, and xz), LGPL-3.0 Python
+packages (psycopg and psycopg-binary), and Python packages with MPL-2.0 terms
+(certifi, orjson, and tqdm).
+
+
+NVIDIA Switchyard and its LiteLLM plugin
+----------------------------------------
+Source:  https://github.com/NVIDIA-NeMo/Switchyard at commit
+         21075c6652152dac88a5fbc6b878ca37d7617c1c, downloaded as a source
+         tarball pinned by sha256 and built into the image
+License: Apache-2.0, Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES
+
+The image includes the upstream LICENSE and NOTICE files in
+/usr/share/licenses/switchyard/.
+
+
+Build tools (used only while the image builds; not in the runtime image)
+-----------------------------------------------------------------------
+Rust toolchain:  the rust 1.99.1 slim-bookworm Docker Official Image. Rust is
+                 under MIT or Apache-2.0; the image's Debian packages are
+                 under their own licenses, including GPL.
+maturin:         MIT OR Apache-2.0
+uv:              MIT OR Apache-2.0
+
+
+GitHub Actions used by CI (.github/workflows/ci.yml)
+----------------------------------------------------
+actions/checkout:            MIT
+actions/setup-node:          MIT
+docker/setup-buildx-action:  Apache-2.0
+
+
+npm packages
+------------
+`npm ci` installs the packages that the CDK app and its tests use from the npm
+registry. package-lock.json lists them; each keeps its own license.

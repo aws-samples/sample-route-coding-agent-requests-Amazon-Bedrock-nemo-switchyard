@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      aws-cdk:
+        patterns:
+          - aws-cdk
+          - aws-cdk-lib
+          - constructs
+          - cdk-nag
+      dev-tooling:
+        dependency-type: development
+    ignore:
+      # Major toolchain versions need a deliberate upgrade: typescript-eslint 8
+      # supports TypeScript below 6.1, ESLint 10 is a new major with breaking
+      # changes, and @types/node should track the Node line the project targets.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /docker/gateway
+    schedule:
+      interval: weekly
+    ignore:
+      # The LiteLLM base image is pinned to the 1.102.x line that the Switchyard
+      # plugin targets, and the Dockerfile asserts the exact version; bump it
+      # deliberately.
+      - dependency-name: berriai/litellm
+      - dependency-name: ghcr.io/berriai/litellm
+  # The hashed security patches and the build-time uv in the gateway image.
+  - package-ecosystem: pip
+    directory: /docker/gateway
+    schedule:
+      interval: weekly

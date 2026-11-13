@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# CDK
+cdk.out*/
+cdk.context.json
+.cdk.staging/
+
+# Compiled TypeScript (the project runs through tsx; nothing is emitted on purpose)
+*.js
+*.d.ts
+*.js.map
+!jest.config.js
+!eslint.config.mjs
+!scripts/*.js
+
+# Test and coverage output
+coverage/
+# Offline proxy test config (bind-mounted into the container)
+.e2e-tmp/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Bench output and local routing logs
+bench/results/
+*.jsonl
+
+# Python
+__pycache__/
+*.pyc
+
+# Local agent working notes (may contain account-specific details)
+.agents/
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

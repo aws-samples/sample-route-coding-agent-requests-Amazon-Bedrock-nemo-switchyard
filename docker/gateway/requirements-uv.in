@@ -1,0 +1,6 @@
+# uv installs the Switchyard wheel and the security patches during the image
+# build. It is installed in the builder stage and mounted for those steps only,
+# so it does not ship in the runtime image. Recompile requirements-uv.txt with:
+#   uv pip compile requirements-uv.in --no-deps --generate-hashes --universal \
+#     --python-version 3.11 -o requirements-uv.txt
+uv==0.13.5

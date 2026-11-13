@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned by commit SHA; Dependabot's github-actions updates keep the
+# SHAs and version comments current. No job needs the token after checkout.
+jobs:
+  verify:
+    name: Lint, type-check, test, synth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm test
+
+      # The VPC construct looks up Availability Zones for the target account.
+      # Seeding that one context value lets `cdk synth` run with no AWS
+      # credentials; the placeholder account never exists.
+      - name: Seed CDK context for an offline synth
+        run: |
+          cat > cdk.context.json <<'EOF'
+          {
+            "availability-zones:account=123456789012:region=us-east-1": ["us-east-1a", "us-east-1b"]
+          }
+          EOF
+
+      # Synth needs HTTPS settings or the plain-HTTP opt-in. The opt-in needs no
+      # hosted zone lookup; Jest synthesizes both HTTPS modes.
+      - name: Synthesize both profiles (no AWS credentials needed)
+        run: |
+          for profile in stage random; do
+            npx cdk synth --quiet -o "cdk.out-$profile" \
+              -c allowedCidr=203.0.113.0/24 -c allowPlainHttp=true -c routingProfile="$profile"
+          done
+        env:
+          CDK_DEFAULT_ACCOUNT: '123456789012'
+          CDK_DEFAULT_REGION: us-east-1
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  shell:
+    name: Shell and Python checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: shellcheck
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q shellcheck
+          shellcheck scripts/*.sh docker/gateway/start.sh
+
+      # test/python only; bench/tasks holds deliberately failing fixtures.
+      - name: Python runner tests
+        run: python3 -m unittest discover -s test/python -v
+
+      - name: Python syntax
+        run: find bench scripts test -name '*.py' -exec python3 -m py_compile {} +
+
+  docker:
+    name: Build and test plugin image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Anonymous ECR Public pulls from shared runners hit its data limit, so CI pulls the
+      # Docker Official Images from Docker Hub. The digest pins keep the content identical.
+      - name: Build pinned plugin image
+        run: |
+          sed 's#public.ecr.aws/docker/library/#docker.io/library/#' docker/gateway/Dockerfile \
+            > "$RUNNER_TEMP/Dockerfile.ci"
+          docker build --load -t switchyard-litellm:ci -f "$RUNNER_TEMP/Dockerfile.ci" docker/gateway
+
+      - run: npm ci
+
+      - name: Check both profiles
+        run: |
+          npm run validate:profile -- stage
+          npm run validate:profile -- random
+
+      - name: In-image routing tests
+        run: >
+          docker run --rm --network none --entrypoint python
+          -e REPO_ROOT=/repo -e AWS_REGION=us-east-1 -e PYTHONDONTWRITEBYTECODE=1
+          -v "$PWD:/repo:ro" switchyard-litellm:ci
+          -m unittest discover -s /repo/docker/gateway/tests -v
+
+      - name: Offline proxy integration tests
+        timeout-minutes: 15
+        run: npm run test:proxy
+        env:
+          GATEWAY_IMAGE: switchyard-litellm:ci
+          E2E_READY_TIMEOUT: '180'
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # The gitleaks CLI (MIT license), pinned by version and by the sha256 from
+      # the release's gitleaks_<version>_checksums.txt. Update both together.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/gitleaks" gitleaks
+          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+
+      # Scans every commit reachable from the checkout; findings are redacted.
+      - name: Scan the history for secrets
+        run: gitleaks git --redact --no-banner --verbose .

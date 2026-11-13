@@ -1,0 +1,39 @@
+# The routed group `switchyard` holds the candidates. Random weights follow the
+# unique candidate declaration order. Change models here and weights in
+# switchyard.toml, and keep one baseline group per routed model.
+#
+# Baseline groups send every request to one model, for comparing the routed
+# group's cost and pass rate with each model alone in the same deployment.
+# Name each by its model alias and keep exactly one deployment in it; the
+# gateway wrapper passes single-model groups through without Switchyard.
+model_list:
+  - model_name: switchyard
+    litellm_params:
+      model: bedrock/converse/global.anthropic.claude-opus-5-5
+      aws_region_name: os.environ/AWS_REGION
+  - model_name: switchyard
+    litellm_params:
+      model: bedrock/converse/nvidia.nemotron-super-3-120b
+      aws_region_name: os.environ/AWS_REGION
+  # One-model baseline groups, same model strings as the routed candidates.
+  - model_name: claude-opus-5-5
+    litellm_params:
+      model: bedrock/converse/global.anthropic.claude-opus-5-5
+      aws_region_name: os.environ/AWS_REGION
+  - model_name: nemotron-super-3-120b
+    litellm_params:
+      model: bedrock/converse/nvidia.nemotron-super-3-120b
+      aws_region_name: os.environ/AWS_REGION
+
+# The same object selects a deployment and applies supported request changes.
+router_settings:
+  plugins:
+    - switchyard_gateway.configured.ROUTING_PLUGIN
+litellm_settings:
+  callbacks:
+    - switchyard_gateway.configured.ROUTING_PLUGIN
+  drop_params: true
+  request_timeout: 600
+  num_retries: 2
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

@@ -1,0 +1,5 @@
+# Uses the same two-model inventory as the Stage example, without tier roles.
+algorithm = "random"
+# Weights follow unique candidate declaration order in litellm.yaml.
+# Omitting weights gives every candidate equal probability per request.
+weights = [0.5, 0.5]

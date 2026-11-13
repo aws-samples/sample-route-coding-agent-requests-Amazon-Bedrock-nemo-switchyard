@@ -1,0 +1,58 @@
+{
+  "name": "sample-route-coding-agent-requests-amazon-bedrock-nemo-switchyard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LiteLLM gateway with the NVIDIA Switchyard routing plugin on Amazon Bedrock, deployed on ECS/Fargate",
+  "license": "MIT-0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aws-samples/sample-route-coding-agent-requests-Amazon-Bedrock-nemo-switchyard.git"
+  },
+  "homepage": "https://github.com/aws-samples/sample-route-coding-agent-requests-Amazon-Bedrock-nemo-switchyard#readme",
+  "bugs": {
+    "url": "https://github.com/aws-samples/sample-route-coding-agent-requests-Amazon-Bedrock-nemo-switchyard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "postinstall": "node scripts/patch-bundled-deps.js",
+    "build": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "jest",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "validate:profile": "node --import tsx scripts/validate-profile.ts",
+    "test:proxy": "python3 test/plugin_e2e.py",
+    "test:python": "python3 -m unittest discover -s test/python -v"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.274.0",
+    "constructs": "^10.4.2",
+    "smol-toml": "^1.9.1",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.3",
+    "@swc/core": "^1.16.20",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "aws-cdk": "2.1146.1",
+    "brace-expansion": "5.0.12",
+    "cdk-nag": "^3.0.2",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.2.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.72.0"
+  },
+  "overrides": {
+    "brace-expansion@5": "5.0.12",
+    "js-yaml": "^4.1.0"
+  }
+}

@@ -1,0 +1,7 @@
+# All candidates share the public group. Stage assigns roles by declaration
+# order: capable first, efficient second. Change either provider model below.
+model_list:
+  - model_name: switchyard
+    litellm_params:
+      model: bedrock/example
+      aws_region_name: os.environ/AWS_REGION

@@ -1,0 +1,31 @@
+# The stage profile with one deployment opting into client-side credential
+# fields, which turns off LiteLLM's request-body guard for that model group.
+# Synth must refuse it.
+model_list:
+  - model_name: switchyard
+    litellm_params:
+      model: bedrock/converse/global.anthropic.claude-opus-5-5
+      aws_region_name: os.environ/AWS_REGION
+  - model_name: switchyard
+    litellm_params:
+      model: bedrock/converse/nvidia.nemotron-super-3-120b
+      aws_region_name: os.environ/AWS_REGION
+  - model_name: claude-opus-5-5
+    litellm_params:
+      model: bedrock/converse/global.anthropic.claude-opus-5-5
+      aws_region_name: os.environ/AWS_REGION
+      configurable_clientside_auth_params:
+        - api_key
+  - model_name: nemotron-super-3-120b
+    litellm_params:
+      model: bedrock/converse/nvidia.nemotron-super-3-120b
+      aws_region_name: os.environ/AWS_REGION
+router_settings:
+  plugins:
+    - switchyard_gateway.configured.ROUTING_PLUGIN
+litellm_settings:
+  callbacks:
+    - switchyard_gateway.configured.ROUTING_PLUGIN
+  drop_params: true
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

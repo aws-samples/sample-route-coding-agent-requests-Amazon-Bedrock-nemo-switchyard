@@ -1,0 +1,37 @@
+services:
+  litellm:
+    build:
+      context: ./docker/gateway
+    image: switchyard-litellm:local
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?set LITELLM_MASTER_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?export temporary AWS credentials}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?export temporary AWS credentials}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      LITELLM_CONFIG: /config/litellm.yaml
+      SWITCHYARD_LITELLM_CONFIG: /config/switchyard.toml
+      # Use the cost map bundled in the pinned image so routing and model limits
+      # don't change with a remote file.
+      LITELLM_LOCAL_MODEL_COST_MAP: 'True'
+      # NO_DOCS, NO_REDOC, and NO_OPENAPI turn off the Swagger, ReDoc, and OpenAPI
+      # routes. DISABLE_ADMIN_UI turns off the UI login backends, but LiteLLM 1.102.2
+      # still serves the /ui static files; the port below is published on 127.0.0.1 only.
+      DISABLE_ADMIN_UI: 'True'
+      NO_DOCS: 'True'
+      NO_REDOC: 'True'
+      NO_OPENAPI: 'True'
+    volumes:
+      - ./profiles/${ROUTING_PROFILE:-stage}:/config:ro
+    ports:
+      - '127.0.0.1:${LITELLM_PORT:-4000}:4000'
+    healthcheck:
+      test:
+        [
+          CMD-SHELL,
+          'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:4000/health/liveliness\")"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s

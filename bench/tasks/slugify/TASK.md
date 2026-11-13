@@ -1,0 +1,1 @@
+slugify() in slug.py returns wrong slugs. It must lowercase the text, drop punctuation, and join words with single dashes, with no leading or trailing dashes. test_slug.py has the expected outputs. Fix slug.py so `python3 -m unittest` passes.

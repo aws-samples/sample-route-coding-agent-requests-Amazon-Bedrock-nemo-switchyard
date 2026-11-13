@@ -1,0 +1,7 @@
+node_modules/
+cdk.out/
+coverage/
+package-lock.json
+CHANGELOG.md
+bench/results/
+*.drawio

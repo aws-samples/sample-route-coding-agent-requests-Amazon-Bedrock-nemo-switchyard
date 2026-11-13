@@ -1,0 +1,8 @@
+# Model inventory is in litellm.yaml. This file configures selection behavior.
+algorithm = "stage"
+# Prefer the efficient candidate when history signals are inconclusive.
+picker = "efficient_first"
+confidence_threshold = 0.5
+# Inspect the three most recent tool results for execution signals.
+recent_window = 3
+only_on_wrong_signal_escalation = true

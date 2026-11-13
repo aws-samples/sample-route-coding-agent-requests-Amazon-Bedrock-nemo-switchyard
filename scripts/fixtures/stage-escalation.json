@@ -1,0 +1,139 @@
+{
+  "model": "switchyard",
+  "max_tokens": 64,
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "bash",
+        "description": "Run a shell command in the project directory.",
+        "parameters": {
+          "type": "object",
+          "properties": { "command": { "type": "string" } },
+          "required": ["command"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "edit",
+        "description": "Replace a string in a file.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "old_string": { "type": "string" },
+            "new_string": { "type": "string" }
+          },
+          "required": ["path", "old_string", "new_string"]
+        }
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a coding agent. Use the tools to fix the failing test, then reply with a one-line summary."
+    },
+    {
+      "role": "user",
+      "content": "tests/test_slugify.py::test_unicode is failing. Fix slugify.py so the test passes."
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_1",
+          "type": "function",
+          "function": {
+            "name": "bash",
+            "arguments": "{\"command\":\"python -m pytest tests/test_slugify.py -q\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_1",
+      "content": "F.\n=================================== FAILURES ===================================\n_______________________________ test_unicode ________________________________\n\n    def test_unicode():\n>       assert slugify(\"Crème Brûlée\") == \"creme-brulee\"\nE       AssertionError: assert 'crme-brle' == 'creme-brulee'\n\ntests/test_slugify.py:14: AssertionError\n1 failed, 1 passed in 0.04s\nCommand exited with code 1"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_2",
+          "type": "function",
+          "function": {
+            "name": "edit",
+            "arguments": "{\"path\":\"slugify.py\",\"old_string\":\"text = re.sub(r'[^a-z0-9]+', '-', text.lower())\",\"new_string\":\"text = re.sub(r'[^a-z0-9]+', '-', text.lower().encode('ascii', 'ignore').decode())\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_2",
+      "content": "Edited slugify.py (1 replacement)."
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_3",
+          "type": "function",
+          "function": {
+            "name": "bash",
+            "arguments": "{\"command\":\"python -m pytest tests/test_slugify.py -q\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_3",
+      "content": "F.\n=================================== FAILURES ===================================\n_______________________________ test_unicode ________________________________\n\n    def test_unicode():\n>       assert slugify(\"Crème Brûlée\") == \"creme-brulee\"\nE       AssertionError: assert 'crme-brle' == 'creme-brulee'\n\ntests/test_slugify.py:14: AssertionError\n1 failed, 1 passed in 0.04s\nCommand exited with code 1"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_4",
+          "type": "function",
+          "function": {
+            "name": "edit",
+            "arguments": "{\"path\":\"slugify.py\",\"old_string\":\".encode('ascii', 'ignore').decode()\",\"new_string\":\".encode('ascii', 'replace').decode()\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_4",
+      "content": "Edited slugify.py (1 replacement)."
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_5",
+          "type": "function",
+          "function": {
+            "name": "bash",
+            "arguments": "{\"command\":\"python -m pytest tests/test_slugify.py -q\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_5",
+      "content": "F.\n=================================== FAILURES ===================================\n_______________________________ test_unicode ________________________________\n\n    def test_unicode():\n>       assert slugify(\"Crème Brûlée\") == \"creme-brulee\"\nE       AssertionError: assert 'crme-brle' == 'creme-brulee'\n\ntests/test_slugify.py:14: AssertionError\n1 failed, 1 passed in 0.04s\nCommand exited with code 1"
+    }
+  ]
+}
