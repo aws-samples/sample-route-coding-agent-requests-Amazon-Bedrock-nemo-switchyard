@@ -36,20 +36,20 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
-    "@swc/core": "^1.16.20",
+    "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.0",
-    "aws-cdk": "2.1146.1",
+    "aws-cdk": "2.1148.1",
     "brace-expansion": "5.0.12",
     "cdk-nag": "^3.0.2",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.2.0",
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.1",
     "tsx": "^4.20.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.73.0"
   },
   "overrides": {
     "brace-expansion@5": "5.0.12",
